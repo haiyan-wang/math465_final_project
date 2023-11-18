@@ -1,0 +1,234 @@
+\documentclass[12pt, reqno]{amsart}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PACKAGES
+
+% Encoding and typography
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+% Document Formatting
+\usepackage[a4paper, right=0.5in, left=0.5in, bottom=1in, top=1in, centering]{geometry}
+\usepackage{enumitem}
+\usepackage{setspace}
+
+\usepackage{titlesec}
+% \titleformat{<command>}[<shape>]{<format>}{<label>}{<sep>}{<before-code>}[<after-code>]
+\titleformat{\section}{\normalfont\bfseries}{}{0em}{}{}
+\titleformat{\subsection}{\normalfont\bfseries}{}{0em}{}{}
+
+\usepackage{float}
+
+\setlength\parindent{0pt}
+
+% Math
+\usepackage{amsmath}
+\usepackage{amsthm}
+
+% Figures
+\usepackage{graphicx}
+\usepackage{subcaption}
+\graphicspath{{./Figures}}
+
+% Misc.
+\usepackage{hyperref}
+\usepackage[noend]{algpseudocode, algorithm}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% NEW COMMANDS
+
+% Symbols
+\renewcommand{\iff}{\Leftrightarrow}
+\renewcommand{\implies}{\Rightarrow}
+\renewcommand{\inf}{\infty}
+\newcommand{\biject}{\leftrightarrow}
+
+% Characters
+\newcommand{\R}{\mathbb R}
+\newcommand{\Z}{\mathbb Z}
+\newcommand{\N}{\mathbb N}
+\newcommand{\C}{\mathbb C}
+\newcommand{\Q}{\mathbb Q}
+\newcommand{\prob}[1]{\mathbb P \left [#1\right ]}
+\newcommand{\ev}[1]{\mathbb E \left [#1\right ]}
+\newcommand{\var}[1]{\text{Var} \left [#1\right ]}
+
+\newcommand{\calM}{\mathcal M}
+\newcommand{\calN}{\mathcal N}
+\newcommand{\calX}{\mathcal X}
+\newcommand{\calY}{\mathcal Y}
+
+\newcommand{\union}{\cup}
+\newcommand{\inter}{\cap}
+\newcommand{\xor}{\oplus}
+
+% Functions
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\newcommand{\supnorm}[1]{\|{#1}\|_\infty}
+\newcommand{\norm}[2]{\|{#2}\|_{#1}}
+
+% Formatting
+\newcommand{\ol}[1]{{\overline{#1}}}
+\newcommand{\ul}[1]{{\underline{#1}}}
+\newcommand{\seq}[1]{\{{#1}\}}
+
+\newcommand{\normpdf}[2]{\frac{1}{{#2}\sqrt{2\pi}} e^{-\frac{1}{2} \left ( \frac{x - {#1}}{{#2}} \right )^2}}
+\newcommand{\poissonpdf}[2]{\frac{{#1}^{#2}e^{-{#1}}}{{#2}!}}
+\newcommand{\bayes}[2]{\prob{{#1}|{#2}} = \frac{\prob{{#2}|{#1}} \prob{#1}}{\prob{#2}}}
+
+\newcommand{\divline}{\noindent\rule{\textwidth}{1pt} \\}
+
+% Environments
+\newcommand{\defn}[2]{\ul{#1} - {#2}}
+\newcommand{\altdefn}[1]{\ul{Def:} {#1}}
+\newcommand{\notation}[2]{{#1} - {#2}}
+\newcommand{\ex}[1]{\ul{Ex:} {#1}}
+\newcommand{\note}[1]{\ul{Note:} {#1}}
+\newtheorem*{theorem}{Theorem}
+\newtheorem*{corollary}{Corollary}
+\newtheorem*{lemma}{Lemma}
+\newtheorem*{proposition}{Proposition}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TITLE
+
+\newcommand{\NAME}{Haiyan Wang}
+\newcommand{\CLASSNAME}{CLASS}
+\newcommand{\PROFNAME}{PROFESSOR}
+\newcommand{\LECNUM}{n}
+\newcommand{\LECTITLE}{TITLE}
+\newcommand{\UNIVERSITY}{Duke University}
+
+\title{MATH465: Final Project Proposal \\ Boosted Generative Adversarial Networks}
+
+\begin{document}
+\maketitle
+\vspace*{-0.25in}
+\centerline{\NAME}
+\centerline{\UNIVERSITY}
+\vspace*{0.15in}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% BODY
+
+\section*{Introduction}
+
+Boosting, as it was originally formulated, refers to a broad category of ensemble methods that take a meta-algorithmic approach to classification problems by aggregating many weak classifiers to create a strong classifier. This project seeks to apply the intuition and methodology underlying various boosting methods for classification to generative models. In particular, I aim to review existing approaches to boosting generative adversarial networks and potentially attempt my own modifications to those methodologies. \\
+
+\section*{Generative Adversarial Networks}
+
+Generative adversarial networks (GANs) were proposed by Goodfellow et al. (2014) as a novel method for developing generative models. GANs are, as the name implies, built on an adversarial interaction between a generator and a discriminative classifier wherein the generator creates artificial samples based on some underlying distribution which are then passed to a discriminator that attempts to distinguish between true and artificial samples. More precisely, the generator $G$ in a GAN is trained to maximize the probability that the discriminator $D$ misclassifies artificial samples as real data. This approach strongly suggests an underlying minimax algorithm, and indeed, GANs represent a two-player minimax game in which the generator is the minimizer and the discriminator is the maximizer. \\
+
+Consider a GAN in which the generator and discriminator are both multilayer perceptrons. The distribution of the generator $p_g$ is defined by a mapping from a distribution of input noise vectors $z \sim p_z$ to generated samples $G(z, \theta_z)$ where $G$ is a differentiable function approximated by the generator MLP with parameters $\theta_G$. The discriminator outputs a scalar $D(x, \theta_d)$ representing the probability that $x$ is drawn from some distribution of real data $p_x$ rather than $p_g$, and it is trained by maximizing the probability that samples are correctly labeled as real or artificial. The entire GAN can then be represented by the game on the value function $V(G, D)$:
+\begin{align*}
+    \min_G \max_D V(D, G) = \mathbb{E}_{x \sim p_x} [\log D(x)] + \mathbb{E}_{z \sim p_z} [\log (1 - D(G(z)))]
+\end{align*}
+
+Both the generator and disciminator are optimized with gradient descent. Goodfellow et al. (2014) considers the theoretical case in which models have infinite capacity and training time is unlimited, though they take an iterative approach in which $G$ and $D$ are optimized alternately (i.e. $D$ is optimized for $k$ steps then $G$ is optimized for one step, repeating until convergence). This iterative approach is adopted because optimizing $D$ in a single loop is infeasible from a computational standpoint and would result in overfitting when training the model on a finite dataset. \\
+
+\begin{algorithm}[H]
+    \caption*{Minibatch stochastic gradient descent on GANs given by Goodfellow et al. (2014)}
+    \begin{algorithmic}
+        \For {number of training iterations}
+            \For {$k$ steps}
+                \begin{itemize}
+                    \setlength\itemindent{25pt}
+                    \item Sample a minibatch of $m$ noise vectors $\{z_1, ..., z_m\}$ from $p_z$
+                    \item Sample a minibatch of $m$ real samples $\{x_1, ..., x_m\}$ from $p_x$
+                    \item Update the discriminator
+                    \begin{align*}
+                        \nabla_{\theta_D} \frac{1}{m} \sum_{i=1}^{m} \left[\log D(x_i) + \log(1 - D(G(z_i)))\right]
+                    \end{align*}
+                \end{itemize}
+            \EndFor
+            \State \textbf{end for}
+            \begin{itemize}
+                \item Sample a minibatch of $m$ noise vectors $\{z_1, ..., z_m\}$ from $p_z$
+                \item Update the generator
+                \begin{align*}
+                    \nabla_{\theta_G} \frac{1}{m} \sum_{i=1}^{m} \log(1 - D(G(z_i)))
+                \end{align*}
+            \end{itemize}
+        \EndFor
+        \State \textbf{end for}
+    \end{algorithmic}
+\end{algorithm}
+
+Goodfellow et al. (2014) goes on to prove that, given the earlier assumptions of unlimited model capacity and training time, that the two-player minimax game is optimized by this algorithm and converges to the global optimum $p_g = p_x$. More broadly, there is a wealth of literature beyond the scope of this project analyzing the convergence of GANs given stricter (and more practical) bounds on the size of the models and the amount of training time as well as providing novel improvements to GAN training that improve efficiency and convergence. However, it is broadly true that the minimax game underlying GANs may not always converge to a Nash equilibrium in which both objectives are optimal (Farnia, Ozdaglar 2020). \\
+
+\section*{Boosted Classification}
+
+Research into boosting algorithms arose from a question first posed by Michael Kearns in 1988 concerning the hypothesis boosting problem. The question, informally stated, asks whether the existence of a "weak" classifier, or a model that performs slightly better than random guessing with high probability, implies the existence of a "strong" classifier, or a model whose accuracy can be arbitrarily high. \\
+
+The answer to Kearns' question, proven by Robert Schapire through the strength of weak learnability, is yes. Schapire demonstrated that any concept class is weakly learnable (there exists a hypothesis with slightly better than random performance) if and only if it is strongly learnable (there exists a hypothesis with arbitrarily low error). He further developed several algorithms demonstrating this finding by aggregating a number of weak classifiers with slightly better than random performance to create a strong classifier with error rate arbitrarily close to 0. The most consequential and powerful of these algorithms, Adaptive Boosting, or AdaBoost for short, was formulated along with Yoav Freund in 1995, and is outlined briefly below (drawn from my notes from Professor Cynthia Rudin's CS671 course).
+
+\newpage
+\subsection*{AdaBoost}
+
+Given some labeled binary dataset $X = \{(x_i, y_i)\}_{i=1}^n$ and some efficient weak learning algorithm $A$ that produces weak classifiers $h: \calX \to \{-1, 1\}$ where $x \subset \calX$, we want to produce a classifier $H: \calX \to \{-1, 1\}$ with error bounded above by some $\epsilon > 0$. \\
+
+\begin{algorithm}[H]
+    \caption*{AdaBoost}
+    \begin{algorithmic}
+        \State Initialize the weights on the training samples as a uniform distribution $d_{1, i} = \frac{1}{n}$ \\
+        \For {classifier $t$ of $T$}
+            \begin{itemize}
+                \item Generate weak classifier $h_t = A(X, d_t)$ on samples weighted by $d_t$
+
+                \item Calculate the weighted misclassification error of $h_t$
+                \begin{align*}
+                    \epsilon_t = \frac{1}{n} \sum_{i=1}^{n} d_{t, i} \mathbf{1}_{h_t(x_i) \neq y_i}
+                \end{align*}
+
+                \item Calculate the weight of $h_t$ in the final strong classifier
+                \begin{align*}
+                    \alpha_t = \frac{1}{2} \ln \left(\frac{1 - \epsilon_t}{\epsilon_t}\right)
+                \end{align*}
+
+                \item Define a normalization factor $Z_t$ such that updated weights are a discrete probability distribution
+                \begin{align*}
+                    Z_t = \sum_{i=1}^{n} e^{\alpha_t y_i h_t(x_i)}
+                \end{align*}
+
+                \item Update sample weights where $y_i h_t(x_i) = 1$ if the prediction is correct and -1 if not
+                \begin{align*}
+                    d_{t+1, i} = \frac{d_{t, i}}{Z_t} e^{\alpha_t y_i h_t(x_i)}
+                \end{align*}
+            \end{itemize}
+        \EndFor
+        \State \textbf{end for} \\
+        \State Aggregate the weak classifiers
+        \begin{align*}
+            H = \sum_{t=1}^{T} \alpha_t \cdot h_t
+        \end{align*}
+        \State \Return H 
+    \end{algorithmic}
+\end{algorithm}
+
+In each iteration and for every new weak classifier, the dataset is reweighted such that samples that were previously harder to classify are more heavily weighted in the loss function of the current iteration, while samples that were easier to classify are weighted more lightly. The effect is twofold: (1) if $A$ is deterministic, reweighting the dataset enables $A$ to generate a new weak classifier $h$ at each iteration even though the dataset remains the same; (2) new classifiers perform better specifically on samples that were previously misclassified frequently, improving the overall performance of the strong classifier once aggregated. \\
+
+The optimization scheme underlying AdaBoost is coordinate descent on exponential loss. This loss is a function of the weak classifiers, and the weight of each weak classifier $\alpha$ is formulated as a direct result of this optimization method. \\
+
+While most research has thus far focused on boosting classifiers, the methodologies underlying boosted classifiers like AdaBoost seem, at least intuitively, to be generalizable beyond classification tasks. \\
+
+\section*{Boosted Generation}
+
+Turning now to generative tasks, I pose the question - is it possible to aggregate a number of "weak" generators to create a single "strong" generator with improved performance? Of course, in the context of generative problems, the notions of weak and strong differ substantially from their counterparts in classification, and a clearer formulation of what precisely entails weak and strong generators will be a significant focus of this project. The following section explores some of the available literature on existing approaches to boosting generators with the goal of solidifying definitions, contextualizing existing and ongoing research, and potentially discovering areas for further exploration. \\
+
+\subsection*{AdaGAN (Tolstikhin et al., 2017)}
+
+AdaGAN is a meta-algorithmic approach to image generation that aims to address the missing modes problem prevalent in GANs wherein a generative model is unable to produce artificial examples of certain categories in the training data. AdaGAN implements an iterative procedure similar to AdaBoost in which the training dataset is repeatedly reweighted and used to train a new generator. These generators are aggregated into a mixture model, and the outputs of the combined model are used to reweight the training data for the next iteration. Though motivated originally by GANs, this methodology could be applied more broadly to any generative model. \\
+
+\section*{Papers}
+
+\begin{itemize}
+    \item \href{https://www.cis.upenn.edu/~mkearns/papers/boostnote.pdf}{Kearns 88 (Hypothesis Boosting Question)}
+    \item \href{http://rob.schapire.net/papers/strengthofweak.pdf}{Schapire 90 (Strength of Weak Learnability)}
+    \item \href{https://arxiv.org/pdf/1701.02386.pdf}{Tolstikhin et al. 17 (AdaGAN)}
+    \item \href{https://arxiv.org/pdf/1406.2661.pdf}{Goodfellow et al. 14 (GANs)}
+    \item \href{https://arxiv.org/pdf/2002.09124.pdf#:~:text=GANs%20trained%20using%20first%2D%20order,the%20GAN%20zero%2Dsum%20game.}{Farnia, Ozdaglar 20 (Nash Equilibrium of GANs)}
+\end{itemize}
+
+\end{document}
